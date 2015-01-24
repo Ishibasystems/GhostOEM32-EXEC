@@ -1,0 +1,224 @@
+	#runtime"hsp3cl"
+	#packopt name "x86"
+	#include"kernel32.as"
+
+	mes"=----------------------------------------------------------="
+	mes" GhostOEM32 EXEC 改 for SOTEC PX9512 VISTA Version 1.0"
+	mes" Copyright (C) Ishibasystems Software. All rights reserved."
+	mes"=----------------------------------------------------------="
+
+//	使用している関数解説
+
+	;使い方
+	;================================================================================
+	;
+	; execex "Command"
+	;
+	;  "Command"	: 実行するコマンド
+	;================================================================================
+	;
+	;<>説明
+	; コマンドを実行します。
+	;
+	; コマンドを実行後、標準出力にプログラムの出力を出力します。
+	; ※execでは結果は出力されません。
+	;
+
+	;================================================================================
+	;
+	; GetFileAttributes "FileName"
+	;
+	;  "FileName"	: ファイル名
+	;================================================================================
+	;
+	;<>説明
+	; ファイルが存在するか調べます(と言ったら…(^^; MDMS様お許しください！)
+	;
+	; 命令の実行後は、システム変数statに結果が返ります。
+	; システム変数statが-1以外の場合は、ファイルがあることを示しています。
+	;
+
+	;================================================================================
+	;
+	; GetDriveType "Name"
+	;
+	;  "Name"	: ドライブ名
+	;================================================================================
+	;
+	;<>説明
+	; ドライブがCD/DVDか調べます(と言ったら…(^^; MDMS様お許しください！part2)
+	;
+	; 命令の実行後は、システム変数statに結果が返ります。
+	; システム変数statが5の場合は、ドライブがCD/DVDであることを示しています。
+	;
+
+	#module
+
+		#deffunc execex str p1
+			sa=12,0,1
+			CreatePipe varptr(h1),varptr(h2),varptr(sa),32000
+			dim pi,4
+			dim si,17
+			si=68
+			si.11=$101,5,0,0,h2
+			CreateProcess 0,p1,0,0,1,0,0,0,varptr(si),varptr(pi)
+			if stat{
+				WaitForSingleObject pi,-1
+				PeekNamedPipe h1,0,0,0,varptr(size),0
+				sdim buf,size+1
+				PeekNamedPipe h1,varptr(buf),size+1,varptr(size),0,0
+				mes buf
+			}
+			CloseHandle h1
+			CloseHandle h2
+			return
+
+	#global
+
+	GetFileAttributes"gdisk32.exe"
+	if stat=-1 : mes"Error:\tGDisk32.exeが見つかりませんでした。\n\tリカバリーはできません。\n" : goto*menu2
+	GetFileAttributes"ghostoem32.exe"
+	if stat=-1 : mes"Error:\tGhostOEM32.exeが見つかりませんでした。\n\tリカバリーはできません。\n" : goto*menu2
+
+	//DVDドライブを検索
+	DISK="X:\\"
+	repeat 27,65
+		poke DISK,,cnt
+		GetDriveType varptr(DISK)
+		if stat=5 : GetFileAttributes DISK+"vista.img" : if stat!-1 : break
+		//↑?:\vista.imgでディスクチェック。Windows PE のDVDディスクはドライブレター不定。
+	loop
+	if peek(DISK,)=91 : mes"Error:\tイメージデータの入ったディスクが見つかりませんでした。\n\tリカバリーはできません。\n" : goto*menu2
+
+	//リカバリメニュー
+	mes"Menu"
+	mes" 1.標準のリカバリ(Cドライブ上書き)"
+	mes"  既存のパーティションをサイズ変更せずにリカバリします。"
+	mes"  他の既存のパーティション内データの変更・削除はありません。\n"
+	mes" 2.高度なリカバリ(Cドライブ50%:Dドライブ50%)"
+	mes"  Cドライブ50%、Dドライブ50%のパーティションを作成しリカバリします。"
+	mes"  ドライブ内の既存のパーティション・データは全て削除されます。\n"
+	mes" 3.高度なリカバリ(Cドライブ100%)"
+	mes"  Cドライブ100%のパーティションをを作成しリカバリします。"
+	mes"  ドライブ内の既存のパーティション・データは全て削除されます。\n"
+	mes" 4.コマンドプロント"
+	mes"  リカバリプログラムを終了し、コマンドプロントを操作できます。\n"
+	mes" 5.シャットダウン"
+	mes"  リカバリプログラムを終了し、PCをシャットダウンします。\n"
+	//↑これ以上メニュー増やすと1ページで収まらないかも。
+
+*command
+	mes "続行するには数字キーを入力してください　．．．"
+	flag=0
+	input act,1,1
+	act=0+strmid(act,0,1)
+
+	switch act
+
+		case 1
+			//処理①
+			mes"標準のリカバリ(Cドライブ上書き)"
+			gosub*yn
+			if flag{
+				mes"データ構成中　．．．"
+				execex"ghostoem32 -clone,mode=prestore,src="+DISK+"vista.img:1,dst="+HDD+":1, -sure -auto -rb"
+				mes"処理が終了しました。\n"
+			}
+			flag^=1
+		swbreak
+
+		case 2
+			//処理②
+			mes"高度なリカバリ(Cドライブ50%:Dドライブ50%)"
+			gosub*yn
+			if flag{
+				mes"パーティション削除中　．．．"
+				execex"gdisk32 "+HDD+" /del /all"
+				mes"データ構成中　．．．"
+				execex"ghostoem32 -clone,mode=prestore,src="+DISK+"vista.img:1,dst="+HDD+":1,sze2=50P -sure -auto -fx"
+				execex"ghostoem32 -clone,mode=prestore,src="+DISK+"data.img:1,dst="+HDD+":2 -sure -auto -rb"
+				mes"処理が終了しました。\n"
+			}
+			flag^=1
+		swbreak
+
+		case 3
+			//処理③
+			mes"高度なリカバリ(Cドライブ100%)"
+			gosub*yn
+			if flag{
+				mes"パーティション削除中　．．．"
+				execex"gdisk32 "+HDD+" /del /all"
+				mes"データ構成中　．．．"
+				execex"ghostoem32 -clone,mode=prestore,src="+DISK+"vista.img:1,dst="+HDD+":1 -sure -auto -rb"
+				mes"処理が終了しました。\n"
+			}
+			flag^=1
+		swbreak
+
+		case 4
+			//処理④
+			goto*program_end
+		swbreak
+
+		case 5
+			//処理⑤
+			goto*shutdowm
+		swbreak
+
+		default
+			mes"選択した番号は間違っています。\n"
+			flag+
+		swbreak
+
+	swend
+
+	if flag : goto*command
+
+	goto*menu2
+
+*yn
+	//対象ディスク番号選択
+	execex"gdisk32"
+	mes"一覧から対象のディスク番号を指定してください ※2桁有効"
+	input key,2,1
+	HDD=int(strmid(key,0,2))
+	mes"対象ドライブ: DISK "+HDD
+
+	//質問
+	mes"\nデータは消えてしまいます。本当にリカバリを実行しますか (Y/N)?"
+	input key,1,1
+	key=getpath(strmid(key,0,1),16)
+	if peek(key,cnt)='y' : flag=1 : return
+	if peek(key,cnt)='n' : flag=0 : return
+	goto*yn
+
+*menu2
+	//リカバリ執行、もしくはリカバリ不能時のメニュー
+	mes"Menu"
+	mes" 1.コマンドプロント"
+	mes"  リカバリプログラムを終了し、コマンドプロントを操作できます。\n"
+	mes" 2.シャットダウン"
+	mes"  リカバリプログラムを終了し、PCをシャットダウンします。\n"
+
+*command2
+	mes "続行するには数字キーを入力してください　．．．"
+	input act,1,1
+	act=0+strmid(act,0,1)
+	if act=1 : goto*program_end
+	if act=2 : goto*shutdowm
+	mes"選択した番号は間違っています。\n"
+	goto*command2
+
+*program_end
+	//下記の説明どおりに終了させる。
+	//これは Windows PE の仕様だからしょうがない。
+	mes"リカバリプログラムを終了します　．．．\n"
+	mes"警告:コマンドプロントは必ず[wpeutil shutdowm]で終了させてください。"
+	mes"右上の[×]ボタン、[EXIT]で終了するとフリーズする可能性があります。"
+	end
+
+*shutdowm
+	mes"シャットダウンします　．．．"
+	exec"wpeutil shutdowm"	//execex使用禁止。
+	end

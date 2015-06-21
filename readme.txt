@@ -116,7 +116,7 @@
 	・iso イメージを構成します。
 	  コマンドプロンプトに下記のコマンドを入力、[Enter]。
 
-	  oscdimg -u2 -bC:\winpe\etfsboot.com C:\winpe\ISO C:\winpe\winpe.iso
+	  oscdimg -m -u2 -bC:\winpe\etfsboot.com C:\winpe\ISO C:\winpe\winpe.iso
 
 	・C:\winpe\winpe.isoをDVDに焼いて完成。
 
@@ -283,10 +283,14 @@
 	開発。
 
 [2015/01/24]	テキストの修正
-	T.I様、ご指摘ありがとうございました。
+	oscdimgコマンドの修正
+		T.I様、ご指摘ありがとうございました。
 	
 [2015/06/21]	VIA-1A-1 version 1.1 バグ修正
 	シャットダウン時のwpeutilコマンドの修正
+
+[2015/06/21]	テキストの修正
+	oscdimgコマンドの修正
 
 著作者人格権 HuIeji Utsuro , Ishibasystems Software.
 

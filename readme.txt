@@ -1,5 +1,5 @@
 ========================================================================================
-     GhostOEM32 EXEC 改 for SOTEC PX9512 VISTA Version 1.0 (2010/09/02) [VIA-1A-1]
+     GhostOEM32 EXEC 改 for SOTEC PX9512 VISTA Version 1.1 (2015/06/21) [VIA-1A-1]
                   　　　　　　　　　　　                           Copyright (C) 2010 HuIeji Utsuro
 ========================================================================================
 				　　　　　　　　　　　           WARNING : FOR HAND OUT AND USE IN JAPAN ONLY.
@@ -30,23 +30,25 @@
 *開発環境
 
 　このプログラムは
+　　Microsoft Windows xp 32bit
 　　Microsoft Windows 7 64bit
+　　Microsoft Windows 8.1 64bit
 　　onion software HSP script editer for Windows ver3.1
+　　onion software HSP script editer for Windows ver3.4
 　の環境で開発しました。
 
 
 *動作環境
 
-  Microsoft Windows PE 2.0 動作を確認。
   Microsoft Windows PE 3.0 動作を確認。
-  (すべて日本語版32bit)
+  (日本語版32bit)
 
 
 *ファイル構成
 
 　px9512.exe 		実行ファイル
   px9512.hsp		ソースファイル
-  read me!.txt		このファイル
+  read me.txt		このファイル
 
 　このソフトはレジストリを一切使いません(まあ Windows PE 上で書き込んでも再起動時消えるんだけどね)。
 
@@ -282,6 +284,9 @@
 
 [2015/01/24]	テキストの修正
 	T.I様、ご指摘ありがとうございました。
+	
+[2015/06/21]	VIA-1A-1 version 1.1 バグ修正
+	シャットダウン時のwpeutilコマンドの修正
 
 著作者人格権 HuIeji Utsuro , Ishibasystems Software.
 

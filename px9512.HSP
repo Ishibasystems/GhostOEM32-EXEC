@@ -3,7 +3,7 @@
 	#include"kernel32.as"
 
 	mes"=----------------------------------------------------------="
-	mes" GhostOEM32 EXEC 改 for SOTEC PX9512 VISTA Version 1.0"
+	mes" GhostOEM32 EXEC 改 for SOTEC PX9512 VISTA Version 1.1"
 	mes" Copyright (C) Ishibasystems Software. All rights reserved."
 	mes"=----------------------------------------------------------="
 
@@ -90,8 +90,9 @@
 	loop
 	if peek(DISK,)=91 : mes"Error:\tイメージデータの入ったディスクが見つかりませんでした。\n\tリカバリーはできません。\n" : goto*menu2
 
+*command
+	mes "メニュー番号を入力して、Enterキーを押してください。"
 	//リカバリメニュー
-	mes"Menu"
 	mes" 1.標準のリカバリ(Cドライブ上書き)"
 	mes"  既存のパーティションをサイズ変更せずにリカバリします。"
 	mes"  他の既存のパーティション内データの変更・削除はありません。\n"
@@ -106,11 +107,10 @@
 	mes" 5.シャットダウン"
 	mes"  リカバリプログラムを終了し、PCをシャットダウンします。\n"
 	//↑これ以上メニュー増やすと1ページで収まらないかも。
-
-*command
-	mes "続行するには数字キーを入力してください　．．．"
 	flag=0
 	input act,1,1
+	/* ここで入力待機 */
+
 	act=0+strmid(act,0,1)
 
 	switch act
@@ -135,7 +135,7 @@
 				mes"パーティション削除中　．．．"
 				execex"gdisk32 "+HDD+" /del /all"
 				mes"データ構成中　．．．"
-				execex"ghostoem32 -clone,mode=prestore,src="+DISK+"vista.img:1,dst="+HDD+":1,sze2=50P -sure -auto -fx"
+				execex"ghostoem32 -clone,mode=prestore,src="+DISK+"vista.img:1,dst="+HDD+":1,sze1=50P -sure -auto -fx"
 				execex"ghostoem32 -clone,mode=prestore,src="+DISK+"data.img:1,dst="+HDD+":2 -sure -auto -rb"
 				mes"処理が終了しました。\n"
 			}
@@ -180,8 +180,9 @@
 *yn
 	//対象ディスク番号選択
 	execex"gdisk32"
-	mes"一覧から対象のディスク番号を指定してください ※2桁有効"
+	mes "一覧から対象のディスク番号を入力して、Enterキーを押してください。"
 	input key,2,1
+
 	HDD=int(strmid(key,0,2))
 	mes"対象ドライブ: DISK "+HDD
 
@@ -194,16 +195,16 @@
 	goto*yn
 
 *menu2
-	//リカバリ執行、もしくはリカバリ不能時のメニュー
-	mes"Menu"
+*command2
+	//リカバリ実行後、もしくはリカバリ不能時のメニュー
+	mes "メニュー番号を入力して、Enterキーを押してください。"
 	mes" 1.コマンドプロント"
 	mes"  リカバリプログラムを終了し、コマンドプロントを操作できます。\n"
 	mes" 2.シャットダウン"
 	mes"  リカバリプログラムを終了し、PCをシャットダウンします。\n"
-
-*command2
-	mes "続行するには数字キーを入力してください　．．．"
 	input act,1,1
+	/* ここで入力待機 */
+
 	act=0+strmid(act,0,1)
 	if act=1 : goto*program_end
 	if act=2 : goto*shutdowm
@@ -220,5 +221,5 @@
 
 *shutdowm
 	mes"シャットダウンします　．．．"
-	exec"wpeutil shutdowm"	//execex使用禁止。
+	exec"wpeutil",0,"shutdowm"	//execex使用禁止。
 	end
